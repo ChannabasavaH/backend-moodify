@@ -5,7 +5,7 @@ import userRouter from '../routes/userRouter'
 const app  = express();
 app.use(express.json());
 
-app.use("/api/user", userRouter);
+app.use("/api/users", userRouter);
 
 const url: string = "mongodb://localhost:27017/moodify"
 

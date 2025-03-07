@@ -3,7 +3,7 @@ import User from "../models/signupSchema";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-// Signup route
+// Signup route - using explicit Request/Response types
 export const registerUser = async (req: Request, res: Response) => {
     try {
         const { userName, email, password } = req.body;
@@ -23,7 +23,7 @@ export const registerUser = async (req: Request, res: Response) => {
 
         await newUser.save();
 
-        return res.status(201).json({ message: "New user is successfully registered" });
+        return res.status(201).json({ message: "New user is successfully registered", newUser });
     } catch (error) {
         return res.status(500).json({ message: "Internal Error", error });
     }
@@ -36,7 +36,7 @@ const generateTokens = (userId: string) => {
     return { accessToken, refreshToken };
 };
 
-// Login route
+// Login route - using explicit Request/Response types
 export const loginUser = async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body;
@@ -57,7 +57,7 @@ export const loginUser = async (req: Request, res: Response) => {
     }
 };
 
-// Refresh access token route
+// Refresh access token route - using explicit Request/Response types
 export const refreshAccessToken = async (req: Request, res: Response) => {
     const refreshToken = req.cookies.refreshToken;
 
@@ -67,7 +67,7 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
         const decoded = jwt.verify(refreshToken, "My_refresh_secret") as { userId: string };
         const newAccessToken = jwt.sign({ userId: decoded.userId }, "My_jwt_secret", { expiresIn: "1h" });
 
-        res.json({ accessToken: newAccessToken });
+        return res.json({ accessToken: newAccessToken });
     } catch (error) {
         return res.status(403).json({ message: "Invalid refresh token", error });
     }
