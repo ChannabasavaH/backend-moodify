@@ -1,11 +1,16 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from 'express';
 import mongoose from 'mongoose';
-import userRouter from '../routes/userRouter'
+import  userRouter  from '../routes/userRouter'
+import analyzeImageRouter from '../routes/analyzeImageRouter';
 
 const app  = express();
 app.use(express.json());
 
 app.use("/api/users", userRouter);
+app.use("/api", analyzeImageRouter);
 
 const url: string = "mongodb://localhost:27017/moodify"
 

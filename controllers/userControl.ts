@@ -3,7 +3,7 @@ import User from "../models/signupSchema";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-// Signup route - using explicit Request/Response types
+// Signup route 
 export const registerUser = async (req: Request, res: Response) => {
     try {
         const { userName, email, password } = req.body;
@@ -31,8 +31,12 @@ export const registerUser = async (req: Request, res: Response) => {
 
 // Function to generate access & refresh tokens
 const generateTokens = (userId: string) => {
-    const accessToken = jwt.sign({ userId }, "My_jwt_secret", { expiresIn: "1h" });
-    const refreshToken = jwt.sign({ userId }, "My_refresh_secret", { expiresIn: "15d" });
+    if (!process.env.JWT_SECRET || !process.env.REFRESH_SECRET) {
+        throw new Error("Missing JWT secret keys");
+    }
+
+    const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const refreshToken = jwt.sign({ userId }, process.env.REFRESH_SECRET, { expiresIn: "15d" });
     return { accessToken, refreshToken };
 };
 
@@ -64,8 +68,12 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
     if (!refreshToken) return res.status(403).json({ message: "Refresh token required" });
 
     try {
-        const decoded = jwt.verify(refreshToken, "My_refresh_secret") as { userId: string };
-        const newAccessToken = jwt.sign({ userId: decoded.userId }, "My_jwt_secret", { expiresIn: "1h" });
+        if (!process.env.JWT_SECRET || !process.env.REFRESH_SECRET) {
+            throw new Error("Missing JWT secret keys");
+        }
+    
+        const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET) as { userId: string };
+        const newAccessToken = jwt.sign({ userId: decoded.userId }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
         return res.json({ accessToken: newAccessToken });
     } catch (error) {
