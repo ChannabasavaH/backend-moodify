@@ -5,9 +5,11 @@ import express from 'express';
 import mongoose from 'mongoose';
 import  userRouter  from '../routes/userRouter'
 import analyzeImageRouter from '../routes/analyzeImageRouter';
+import { apiRateLimiter } from "../utils/middleware";
 
 const app  = express();
 app.use(express.json());
+app.use(apiRateLimiter);
 
 app.use("/api/users", userRouter);
 app.use("/api", analyzeImageRouter);
