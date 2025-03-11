@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { EmotionLikelihood } from '../utils/interfaces';
 import { client } from "../utils/middleware";
+import { searchPlaylistByMood } from "../utils/spotifyMusic";
 
 export const analyzeEmotion = async(req: Request, res: Response) => {
     try {
@@ -51,11 +52,20 @@ export const analyzeEmotion = async(req: Request, res: Response) => {
 
         require('fs').unlinkSync(filePath);
 
+        const recommendedMusicMood = generateMoodFromEmation(dominantEmotion.emotion);
+        let playlists = [];
+        try {
+            playlists = await searchPlaylistByMood(recommendedMusicMood);
+        } catch (spotifyError) {
+            console.error('Spotify playlist search failed:', spotifyError);
+        }
+
         res.json({
             emotions,
             dominant: dominantEmotion.emotion,
             confidenceScore: dominantEmotion.score / 5,
-            recommendedMusinMood: generateMoodFromEmation(dominantEmotion.emotion)
+            recommendedMusicMood: recommendedMusicMood,
+            recommendedPlaylists: playlists || []
         })
     } catch (error) {
         console.log('Error in analyzing image:', error);
@@ -73,3 +83,4 @@ const generateMoodFromEmation = (emotion: string): string => {
     };
     return moodMap[emotion] || 'chill';
 }
+

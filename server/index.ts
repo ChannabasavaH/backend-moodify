@@ -6,11 +6,13 @@ import mongoose from 'mongoose';
 import  userRouter  from '../routes/userRouter'
 import analyzeImageRouter from '../routes/analyzeImageRouter';
 import { apiRateLimiter } from "../utils/middleware";
+import { initSpotifyApi } from "../utils/spotifyMusic";
 
 const app  = express();
 app.use(express.json());
 app.use(apiRateLimiter);
 
+initSpotifyApi();
 app.use("/api/users", userRouter);
 app.use("/api", analyzeImageRouter);
 
