@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 // Signup route 
 export const registerUser = async (req: Request, res: Response) => {
     try {
-        const { userName, email, password } = req.body;
+        const { username, email, password } = req.body;
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
@@ -16,7 +16,7 @@ export const registerUser = async (req: Request, res: Response) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const newUser = await User.create({
-            userName,
+            username,
             email,
             password: hashedPassword,
         });
@@ -43,25 +43,39 @@ const generateTokens = (userId: string) => {
 // Login route - using explicit Request/Response types
 export const loginUser = async (req: Request, res: Response) => {
     try {
-        const { email, password } = req.body;
-
-        const user = await User.findOne({ email });
-        if (!user) return res.status(400).json({ message: "Incorrect Email" });
-
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) return res.status(400).json({ message: "Incorrect password" });
-
-        const { accessToken, refreshToken } = generateTokens(user._id.toString());
-
-        res.cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, sameSite: "strict" });
-
-        return res.status(200).json({ message: "Login Successful", accessToken });
+      const { email, password } = req.body;
+      
+      const user = await User.findOne({ email });
+      if (!user) return res.status(400).json({ message: "Incorrect email" });
+      
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) return res.status(400).json({ message: "Incorrect password" });
+      
+      const { accessToken, refreshToken } = generateTokens(user._id.toString());
+      
+      // Set the refresh token as an HTTP-only cookie
+      res.cookie("refreshToken", refreshToken, { 
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000
+      });
+      
+      return res.status(200).json({ 
+        message: "Login successful", 
+        accessToken,
+        user: {
+          id: user._id,
+          email: user.email
+        }
+      });
     } catch (error) {
-        return res.status(500).json({ message: "Internal Error", error });
+      console.error("Login error:", error);
+      return res.status(500).json({ message: "Internal server error" });
     }
-};
+  };
 
-// Refresh access token route - using explicit Request/Response types
+// Refresh access token route
 export const refreshAccessToken = async (req: Request, res: Response) => {
     const refreshToken = req.cookies.refreshToken;
 

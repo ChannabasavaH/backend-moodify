@@ -1,13 +1,13 @@
 import { Schema, model } from "mongoose";
 
 interface ISignUp {
-    userName: string;
+    username: string;
     email: string;
     password: string;
 }
 
 const signUpSchema = new Schema<ISignUp>({
-    userName: {
+    username: {
         type: String,
         required: true,
     },
