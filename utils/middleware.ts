@@ -99,17 +99,18 @@ export const authenticateUser = (
 //zod validation 
 export const validate =
   (schema: ZodSchema) =>
-  (req: Request, res: Response, next: NextFunction) => {
+  (req: Request, res: Response, next: NextFunction): void => {
     try {
       schema.parse(req.body);
       next(); // Move to the next middleware/controller
     } catch (error) {
       if (error instanceof ZodError) {
         res.status(400).json({ errors: error.errors });
+      } else {
+        res.status(500).json({ error: "Internal Server Error" });
       }
-      res.status(500).json({ error: "Internal Server Error" });
     }
-};
+  };
 
 export const asyncHandler = (fn: Function) => {
   return (req: Request, res: Response, next: NextFunction) => {
