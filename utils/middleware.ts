@@ -6,6 +6,7 @@ import { ImageAnnotatorClient } from '@google-cloud/vision';
 import rateLimit from 'express-rate-limit';
 import { AuthenticatedRequest } from './interfaces';
 import jwt from 'jsonwebtoken'
+import { ZodSchema, ZodError } from "zod";
 
 const JWT_SECRET = process.env.JWT_SECRET ?? ''; 
 
@@ -92,6 +93,22 @@ export const authenticateUser = (
     console.error('Authentication error:', error);
     res.status(401).json({ error: 'Unauthorized: Invalid token' });
   }
+};
+
+
+//zod validation 
+export const validate =
+  (schema: ZodSchema) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    try {
+      schema.parse(req.body);
+      next(); // Move to the next middleware/controller
+    } catch (error) {
+      if (error instanceof ZodError) {
+        res.status(400).json({ errors: error.errors });
+      }
+      res.status(500).json({ error: "Internal Server Error" });
+    }
 };
 
 export const asyncHandler = (fn: Function) => {
