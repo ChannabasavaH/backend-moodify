@@ -110,7 +110,7 @@ export const validate =
         res.status(500).json({ error: "Internal Server Error" });
       }
     }
-  };
+  }
 
 export const asyncHandler = (fn: Function) => {
   return (req: Request, res: Response, next: NextFunction) => {

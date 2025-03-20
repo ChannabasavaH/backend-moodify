@@ -76,7 +76,7 @@ export const loginUser = async (req: Request, res: Response) => {
   };
 
 // Refresh access token route
-export const refreshAccessToken = async (req: Request, res: Response) => {
+export const refreshAccessToken = (req: Request, res: Response) => {
     const refreshToken = req.cookies.refreshToken;
 
     if (!refreshToken) return res.status(403).json({ message: "Refresh token required" });
@@ -85,26 +85,26 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
         if (!process.env.JWT_SECRET || !process.env.REFRESH_SECRET) {
             throw new Error("Missing JWT secret keys");
         }
-    
+
         const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET) as { userId: string };
         const newAccessToken = jwt.sign({ userId: decoded.userId }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
-        return res.json({ accessToken: newAccessToken });
+        return res.status(200).json({ accessToken: newAccessToken });
     } catch (error) {
         return res.status(403).json({ message: "Invalid refresh token", error });
     }
 };
 
-//Logout Route
-export const logout = async (req: Request, res: Response) => {
+//logout
+export const logout = (req: Request, res: Response) => {
     try {
         res.clearCookie("refreshToken", {
             httpOnly: true,
             secure: true,
             sameSite: "strict"
-        })
-        return res.status(200).json({message: "Logout Successful"});
+        });
+        return res.status(200).json({ message: "Logout Successful" });
     } catch (error) {
-        return res.status(500).json({message: "Error in logging out: ", error});
+        return res.status(500).json({ message: "Error in logging out", error });
     }
-}
+};
