@@ -77,7 +77,7 @@ const generateMoodFromEmation = (emotion: string): string => {
     const moodMap: Record<string, string> = {
         joy: 'upbeat',
         sorrow: 'melancholic',
-        anger: 'intense',
+        angry: 'intense',
         surprise: 'energetic',
         neutral: 'chill'
     };
