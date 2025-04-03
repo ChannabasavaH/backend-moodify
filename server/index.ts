@@ -12,13 +12,25 @@ import cors from 'cors';
 
 const app  = express();
 
+const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:8081',
+    'http://10.36.242.224',
+    'http://192.168.163.86',
+];
+
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
-  }));
-app.options('*', cors());
+}));
 
 app.use(cookieParser());
 app.use(express.json());
