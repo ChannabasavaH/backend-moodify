@@ -4,6 +4,9 @@ interface ISignUp {
     username: string;
     email: string;
     password: string;
+    isVerified: boolean;
+    verificationCode: number;
+    verificationExpiry: Date;
 }
 
 const signUpSchema = new Schema<ISignUp>({
@@ -20,6 +23,18 @@ const signUpSchema = new Schema<ISignUp>({
         type: String,
         required: true,
     },
+    isVerified: {
+        type: Boolean,
+        required: true,
+    },
+    verificationCode: {
+        type: Number,
+        required: true,
+    },
+    verificationExpiry: {
+        type: Date,
+        required: true,
+    }
 });
 
 const User = model<ISignUp>("User", signUpSchema);

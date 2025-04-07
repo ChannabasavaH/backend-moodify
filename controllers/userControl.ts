@@ -2,11 +2,15 @@ import { Request, Response } from "express";
 import User from "../models/signupSchema";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer";
 
 // Signup route
 export const registerUser = async (req: Request, res: Response) => {
   try {
     const { username, email, password } = req.body;
+
+    const verificationCode = Math.floor(100000 + Math.random() * 900000);
+    const verificationExpiry = new Date(Date.now() + 60 * 60 * 1000);
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -21,13 +25,62 @@ export const registerUser = async (req: Request, res: Response) => {
       username,
       email,
       password: hashedPassword,
+      isVerified: false,
+      verificationCode,
+      verificationExpiry,
     });
 
     await newUser.save();
 
+    // Send OTP email
+    const transporter = nodemailer.createTransport({
+      host: "smtp.ethereal.email",
+      port: 587,
+      auth: {
+        user: "kareem.morissette59@ethereal.email",
+        pass: "44Pf3MxjTzV8auVD8V",
+      },
+    });
+
+    const info = await transporter.sendMail({
+      from: '"Test App" <no-reply@test.com>',
+      to: email,
+      subject: "OTP Verification",
+      text: `Your OTP is ${verificationCode}`,
+    });
+
+    console.log("Preview URL: " + nodemailer.getTestMessageUrl(info));
+
     return res
       .status(201)
       .json({ message: "New user is successfully registered", newUser });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal Error", error });
+  }
+};
+
+//verify user
+export const verifyUser = async (req: Request, res: Response) => {
+  try {
+    const { username, code } = req.body;
+
+    const user = await User.findOne({ username });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isVerificationCodeValid = user?.verificationCode === Number(code);
+    const isVerificationNotExpired = user?.verificationExpiry > new Date();
+
+    if (isVerificationCodeValid && isVerificationNotExpired) {
+      user.isVerified = true;
+      await user.save();
+
+      return res.status(200).json({ message: "User verified successfully", user });
+    } else {
+      return res.status(400).json({ message: "Invalid or expired verification code" });
+    }
   } catch (error) {
     return res.status(500).json({ message: "Internal Error", error });
   }
