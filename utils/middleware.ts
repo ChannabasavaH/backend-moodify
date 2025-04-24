@@ -71,7 +71,7 @@ export const authenticateUser = (
   try {
     const authHeader = req.headers.authorization;
     
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader?.startsWith('Bearer ')) {
       res.status(401).json({ error: 'Unauthorized: No token provided' });
       return;
     }
@@ -82,7 +82,7 @@ export const authenticateUser = (
     
     if (typeof decoded === 'object' && decoded !== null && ('id' in decoded || 'userId' in decoded)) {
       (req as AuthenticatedRequest).user = {
-        id: (decoded as any).id || (decoded as any).userId as string
+        id: (decoded as any).id ?? (decoded as any).userId as string
       };
       
       next();

@@ -5,7 +5,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cookieParser from 'cookie-parser'
 import  userRouter  from '../routes/userRouter'
-import analyzeImageRouter from '../routes/analyzeImageRouter';
+import playlistRouter from '../routes/playlistRouter';
 import { apiRateLimiter } from "../utils/middleware";
 import { initSpotifyApi } from "../utils/spotifyMusic";
 import cors from 'cors';
@@ -38,7 +38,7 @@ app.use(apiRateLimiter);
 
 initSpotifyApi();
 app.use("/api/users", userRouter);
-app.use("/api", analyzeImageRouter);
+app.use("/api", playlistRouter);
 
 const url: string = "mongodb://localhost:27017/moodify"
 

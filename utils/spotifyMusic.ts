@@ -40,21 +40,21 @@ export const searchPlaylistByMood = async (mood: string, limit: number = 5): Pro
 
     const response = await spotifyApi.searchPlaylists(queryWithTimestamp, { limit, offset });
 
-    if (!response.body.playlists || !response.body.playlists.items) {
+    if (!response.body.playlists?.items) {
       console.log('Invalid response structure from Spotify:', response.body);
       return [];
     }
 
     return shuffleArray(response.body.playlists.items)
-      .filter(playlist => playlist && playlist.id)
+      .filter(playlist => playlist?.id)
       .slice(0, limit) // Shuffle and select the top results
       .map(playlist => ({
         id: playlist.id,
-        name: playlist.name || 'Unnamed Playlist',
+        name: playlist.name ?? 'Unnamed Playlist',
         description: playlist.description ?? '',
-        imageUrl: playlist.images?.[0]?.url || null,
-        externalUrl: playlist.external_urls?.spotify || `https://open.spotify.com/playlist/${playlist.id}`,
-        tracks: playlist.tracks?.total || 0,
+        imageUrl: playlist.images?.[0]?.url ?? null,
+        externalUrl: playlist.external_urls?.spotify ?? `https://open.spotify.com/playlist/${playlist.id}`,
+        tracks: playlist.tracks?.total ?? 0,
         embedUrl: `https://open.spotify.com/embed/playlist/${playlist.id}?utm_source=generator`
       }));
 
