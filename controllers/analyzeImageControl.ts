@@ -71,22 +71,24 @@ export const analyzeEmotion = async (req: Request, res: Response) => {
 
     // Save playlists to DB
     const playlistIds: string[] = [];
+    const savedPlaylists = [];
 
-    // Save to moodHistory if user is verified
     if (req.user?.id) {
       const user = await User.findById(req.user.id);
-
+    
       if (user?.isVerified) {
         for (const playlist of playlists) {
           let existing = await Playlist.findOne({ id: playlist.id });
-
+    
           if (!existing) {
             existing = await Playlist.create(playlist);
           }
+          
+          savedPlaylists.push(existing);
 
           playlistIds.push(existing._id.toString());
         }
-
+    
         user.moodHistory.push({
           emotions,
           dominant: dominantEmotion.emotion,
@@ -95,17 +97,18 @@ export const analyzeEmotion = async (req: Request, res: Response) => {
           recommendedPlaylists: playlistIds,
           timestamp: new Date(),
         });
-
+    
         await user.save();
       }
     }
+    
 
     res.json({
       emotions,
       dominant: dominantEmotion.emotion,
       confidenceScore: dominantEmotion.score / 5,
       recommendedMusicMood,
-      recommendedPlaylists: playlists ?? [],
+      recommendedPlaylists: savedPlaylists ?? [],
     });
   } catch (error) {
     console.log("Error in analyzing image:", error);
