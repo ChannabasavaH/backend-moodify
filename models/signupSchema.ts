@@ -4,6 +4,9 @@ interface ISignUp {
     username: string;
     email: string;
     password: string;
+    profilePhoto: string;
+    mobileNo: string;
+    location: string;
     isVerified: boolean;
     verificationCode: number;
     verificationExpiry: Date;
@@ -46,6 +49,15 @@ const signUpSchema = new Schema<ISignUpExtended>({
     password: {
         type: String,
         required: true,
+    },
+    profilePhoto: {
+        type: String
+    },
+    mobileNo: {
+        type: String,
+    },
+    location: {
+        type: String,
     },
     isVerified: {
         type: Boolean,

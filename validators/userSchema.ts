@@ -6,6 +6,15 @@ export const signUpSchema = z.object({
     password: z.string().min(6, "Password must be atleast 6 characters long")
 })
 
+export const userProfileSchema = z.object({
+    mobileNo: z
+      .string()
+      .length(10, { message: "Mobile number must be exactly 10 digits." })
+      .regex(/^\d{10}$/, { message: "Mobile number must contain only digits." })
+      .optional(),
+    location: z.string().optional(),
+  });
+
 export type signUpData = z.infer<typeof signUpSchema>
 
 export const loginSchema = z.object({

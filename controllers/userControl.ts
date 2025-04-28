@@ -3,14 +3,12 @@ import User from "../models/signupSchema";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
+import fs from "fs";
 
 // Signup route
 export const registerUser = async (req: Request, res: Response) => {
   try {
     const { username, email, password } = req.body;
-
-    const verificationCode = Math.floor(100000 + Math.random() * 900000);
-    const verificationExpiry = new Date(Date.now() + 60 * 60 * 1000);
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -21,6 +19,9 @@ export const registerUser = async (req: Request, res: Response) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const verificationCode = Math.floor(100000 + Math.random() * 900000);
+    const verificationExpiry = new Date(Date.now() + 60 * 60 * 1000);
+
     const newUser = await User.create({
       username,
       email,
@@ -30,9 +31,13 @@ export const registerUser = async (req: Request, res: Response) => {
       verificationExpiry,
     });
 
-    await newUser.save();
+    res
+      .status(201)
+      .json({
+        message: "New user registered successfully. Please verify email.",
+        newUser,
+      });
 
-    // Send OTP email
     const transporter = nodemailer.createTransport({
       host: "smtp.ethereal.email",
       port: 587,
@@ -42,19 +47,21 @@ export const registerUser = async (req: Request, res: Response) => {
       },
     });
 
-    const info = await transporter.sendMail({
-      from: '"Test App" <no-reply@test.com>',
-      to: email,
-      subject: "OTP Verification",
-      text: `Your OTP is ${verificationCode}`,
-    });
-
-    console.log("Preview URL: " + nodemailer.getTestMessageUrl(info));
-
-    return res
-      .status(201)
-      .json({ message: "New user is successfully registered", newUser });
+    transporter
+      .sendMail({
+        from: '"Test App" <no-reply@test.com>',
+        to: email,
+        subject: "OTP Verification",
+        text: `Your OTP is ${verificationCode}`,
+      })
+      .then((info) => {
+        console.log("Preview URL: " + nodemailer.getTestMessageUrl(info));
+      })
+      .catch((err) => {
+        console.error("Error sending email:", err);
+      });
   } catch (error) {
+    console.error("Registration Error:", error);
     return res.status(500).json({ message: "Internal Error", error });
   }
 };
@@ -77,9 +84,13 @@ export const verifyUser = async (req: Request, res: Response) => {
       user.isVerified = true;
       await user.save();
 
-      return res.status(200).json({ message: "User verified successfully", user });
+      return res
+        .status(200)
+        .json({ message: "User verified successfully", user });
     } else {
-      return res.status(400).json({ message: "Invalid or expired verification code" });
+      return res
+        .status(400)
+        .json({ message: "Invalid or expired verification code" });
     }
   } catch (error) {
     return res.status(500).json({ message: "Internal Error", error });
@@ -231,5 +242,57 @@ export const mobileRefreshAccessToken = (req: Request, res: Response) => {
     return res.status(200).json({ accessToken: newAccessToken });
   } catch (error) {
     return res.status(403).json({ message: "Invalid refresh token", error });
+  }
+};
+
+//user-profile route
+export const userProfile = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const { mobileNo, location } = req.body;
+    const file = req.file;
+
+    if (!userId)
+      return res.status(401).json({ message: "Unauthorized access" });
+
+    const user = await User.findById(userId);
+
+    if (!user) return res.status(404).json({ message: "User not found!" });
+
+    if (file) {
+      const imagePath = file.path;
+      const imageData = fs.readFileSync(imagePath);
+      const base64Image = imageData.toString("base64");
+      const mimeType = file.mimetype;
+
+      user.profilePhoto = `data:${mimeType};base64,${base64Image}`;
+    }
+    if (mobileNo) user.mobileNo = mobileNo;
+    if (location) user.location = location;
+
+    await user.save();
+    return res.status(200).json({ message: "User profile updated", user });
+  } catch (error) {
+    console.log("Error while updating user profile", error);
+    return res.status(500).json({ message: "Internal server", error });
+  }
+};
+
+//get user
+export const getUser = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId)
+      return res.status(401).json({ message: "Unauthorized access" });
+
+    const user = await User.findById(userId).select("-password");
+
+    if (!user) return res.status(404).json({ message: "User not found!" });
+
+    return res.status(200).json({ message: "User Found", user });
+  } catch (error) {
+    console.log("Error!", error);
+    return res.status(500).json({ message: "Internal server", error });
   }
 };
