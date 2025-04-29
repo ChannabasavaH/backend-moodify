@@ -1,7 +1,7 @@
 import express from 'express';
 import { analyzeEmotion } from '../controllers/analyzeImageControl';
 import { asyncHandler, upload, createRateLimiter, authenticateUser } from '../utils/middleware';
-import { addToFavorites, getFavoritePlaylists, removeFromFavorites } from '../controllers/playlistControl';
+import { addToFavorites, getFavoritePlaylistById, getFavoritePlaylists, removeFromFavorites } from '../controllers/playlistControl';
 
 const router = express.Router();
 
@@ -15,6 +15,7 @@ router.post(
 
 router.post("/favorites", authenticateUser, asyncHandler(addToFavorites));
 router.get("/favorites", authenticateUser, asyncHandler(getFavoritePlaylists));
+router.get("/favorites/:id", authenticateUser, asyncHandler(getFavoritePlaylistById));
 router.delete("/favorites", authenticateUser, asyncHandler(removeFromFavorites));
 
 export default router;

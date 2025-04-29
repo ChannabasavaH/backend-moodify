@@ -95,3 +95,34 @@ export const getFavoritePlaylists = async (req: Request, res: Response) => {
         return res.status(500).json({ message: "Internal server error" });
     }
 };
+
+//favorite playlist by id
+export const getFavoritePlaylistById = async (req: Request, res: Response) => {
+    try {
+        const userId = req.user?.id;
+        const playlistId = req.params.id;
+
+        if (!userId) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const user = await User.findById(userId).populate("favoritePlaylists.playlist");
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const favorite = user.favoritePlaylists.find(
+            (fav) => fav.playlist && fav.playlist._id.toString() === playlistId
+        );
+
+        if (!favorite) {
+            return res.status(404).json({ message: "Playlist not found in favorites" });
+        }
+
+        return res.status(200).json({ playlist: favorite.playlist });
+    } catch (error) {
+        console.error("Error fetching playlist by ID:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
