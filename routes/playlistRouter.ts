@@ -14,6 +14,7 @@ import {
   getPlaylistHistoryById,
   removeFromFavorites,
 } from "../controllers/playlistControl";
+import { getUser } from "../controllers/userControl";
 
 const router = express.Router();
 
@@ -32,7 +33,26 @@ router.post(
   asyncHandler(addToFavorites)
 );
 
-router.get("/favorites", authenticateUser, asyncHandler(getFavoritePlaylists));
+router.get(
+  "/dashboard",
+  authenticateUser,
+  createRateLimiter(10),
+  asyncHandler(async (req: Request, res: Response) => {
+    const [user, favorites, history] = await Promise.all([
+      getUser(req, res, true), 
+      getFavoritePlaylists(req, res, true),
+      getPlaylistHistory(req, res, true),
+    ]);
+
+    res.json({
+      user,
+      favoritePlaylists: favorites,
+      moodHistory: history,
+    });
+  })
+);
+
+// router.get("/favorites", authenticateUser, asyncHandler(getFavoritePlaylists));
 
 router.get(
   "/favorites/:id",
@@ -48,12 +68,12 @@ router.delete(
   asyncHandler(removeFromFavorites)
 );
 
-router.get(
-  "/history",
-  authenticateUser,
-  createRateLimiter(10),
-  asyncHandler(getPlaylistHistory)
-);
+// router.get(
+//   "/history",
+//   authenticateUser,
+//   createRateLimiter(10),
+//   asyncHandler(getPlaylistHistory)
+// );
 
 router.get(
   "/history/:id",

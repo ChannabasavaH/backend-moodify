@@ -78,30 +78,44 @@ export const removeFromFavorites = async (req: Request, res: Response) => {
   }
 };
 
-export const getFavoritePlaylists = async (req: Request, res: Response) => {
+// get all favorites playlist
+export const getFavoritePlaylists = async (
+  req: Request,
+  res: Response,
+  returnData: boolean = false
+) => {
   try {
     const userId = req.user?.id;
 
     if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      const unauthorizedResponse = { message: "Unauthorized" };
+      if (returnData) return unauthorizedResponse;
+      return res.status(401).json(unauthorizedResponse);
     }
 
-    const user = await User.findById(userId).populate(
-      "favoritePlaylists.playlist"
-    );
+    const user = await User.findById(userId).populate("favoritePlaylists.playlist");
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      const notFoundResponse = { message: "User not found" };
+      if (returnData) return notFoundResponse;
+      return res.status(404).json(notFoundResponse);
     }
 
-    return res.status(200).json({
-      favoritePlaylists: user.favoritePlaylists,
-    });
+    const favoritePlaylists = user.favoritePlaylists;
+
+    if (returnData) {
+      return favoritePlaylists;
+    }
+
+    return res.status(200).json({ favoritePlaylists });
   } catch (error) {
     console.error("Error fetching favorite playlists:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    const errorResponse = { message: "Internal server error" };
+    if (returnData) return errorResponse;
+    return res.status(500).json(errorResponse);
   }
 };
+
 
 //favorite playlist by id
 export const getFavoritePlaylistById = async (req: Request, res: Response) => {
@@ -138,12 +152,18 @@ export const getFavoritePlaylistById = async (req: Request, res: Response) => {
   }
 };
 
-export const getPlaylistHistory = async (req: Request, res: Response) => {
+//get playlist history
+export const getPlaylistHistory = async (
+  req: Request,
+  res: Response,
+  returnData: boolean = false
+) => {
   try {
     const userId = req.user?.id;
 
     if (!userId) {
       const unauthorized = { message: "Unauthorized" };
+      if (returnData) return unauthorized;
       return res.status(401).json(unauthorized);
     }
 
@@ -158,10 +178,12 @@ export const getPlaylistHistory = async (req: Request, res: Response) => {
 
     if (!user) {
       const notFound = { message: "User not found" };
+      if (returnData) return notFound;
       return res.status(404).json(notFound);
     }
 
     const data = { moodHistory: user.moodHistory };
+    if (returnData) return data;
     return res.status(200).json(data);
   } catch (error) {
     console.error("Error while fetching user playlist history", error);
@@ -169,6 +191,7 @@ export const getPlaylistHistory = async (req: Request, res: Response) => {
       message: "Error while fetching user playlist history",
       error,
     };
+    if (returnData) return errRes;
     return res.status(500).json(errRes);
   }
 };

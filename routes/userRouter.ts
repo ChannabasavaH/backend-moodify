@@ -29,7 +29,6 @@ const router = express.Router();
 router.post(
   "/signup",
   validate(signUpSchema),
-  createRateLimiter(10),
   asyncHandler(registerUser)
 );
 
@@ -37,13 +36,11 @@ router.post("/verify", createRateLimiter(10), asyncHandler(verifyUser));
 router.post(
   "/login",
   validate(loginSchema),
-  createRateLimiter(10),
   asyncHandler(loginUser)
 );
 
 router.post(
   "/newaccesstoken",
-  createRateLimiter(10),
   asyncHandler(refreshAccessToken)
 );
 
@@ -51,12 +48,11 @@ router.put(
   "/user-profile",
   validate(userProfileSchema),
   authenticateUser,
-  createRateLimiter(10),
   upload.single("profilePhoto"),
   asyncHandler(userProfile)
 );
 
-router.get("/me", authenticateUser, createRateLimiter(10), asyncHandler(getUser));
+// router.get("/me", authenticateUser, createRateLimiter(10), asyncHandler(getUser));
 
 router.post(
   "/mobile-login",
