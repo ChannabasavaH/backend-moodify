@@ -9,6 +9,7 @@ import {
   verifyUser,
   userProfile,
   getUser,
+  resetPassword,
 } from "../controllers/userControl";
 import {
   asyncHandler,
@@ -33,11 +34,14 @@ router.post(
 );
 
 router.post("/verify", createRateLimiter(10), asyncHandler(verifyUser));
+
 router.post(
   "/login",
   validate(loginSchema),
   asyncHandler(loginUser)
 );
+
+router.put("/forgot-password", createRateLimiter(10), asyncHandler(resetPassword));
 
 router.post(
   "/newaccesstoken",

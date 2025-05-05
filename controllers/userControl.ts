@@ -175,6 +175,28 @@ export const refreshAccessToken = (req: Request, res: Response) => {
   }
 };
 
+//forgot password route
+export const resetPassword = async(req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if(!user) return res.status(404).json({message: "User not found"});
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    user.password = hashedPassword;
+
+    await user.save();
+
+    res.status(200).json({ message: "Password is reseted", user});
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error", error });
+  }
+}
+
 //logout
 export const logout = (req: Request, res: Response) => {
   try {
