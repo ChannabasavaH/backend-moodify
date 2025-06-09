@@ -31,35 +31,26 @@ export const registerUser = async (req: Request, res: Response) => {
       verificationExpiry,
     });
 
-    res
-      .status(201)
-      .json({
-        message: "New user registered successfully. Please verify email.",
-        newUser,
-      });
+    res.status(201).json({
+      message: "New user registered successfully. Please verify email.",
+      newUser,
+    });
 
     const transporter = nodemailer.createTransport({
-      host: "smtp.ethereal.email",
-      port: 587,
+      service: "gmail",
       auth: {
-        user: "kareem.morissette59@ethereal.email",
-        pass: "44Pf3MxjTzV8auVD8V",
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
 
-    transporter
+    await transporter
       .sendMail({
-        from: '"Test App" <no-reply@test.com>',
+        from: '"Moodify" <channabasavahalemani49@gmail.com>',
         to: email,
-        subject: "OTP Verification",
+        subject: "Verify your account",
         text: `Your OTP is ${verificationCode}`,
       })
-      .then((info) => {
-        console.log("Preview URL: " + nodemailer.getTestMessageUrl(info));
-      })
-      .catch((err) => {
-        console.error("Error sending email:", err);
-      });
   } catch (error) {
     console.error("Registration Error:", error);
     return res.status(500).json({ message: "Internal Error", error });
@@ -176,13 +167,13 @@ export const refreshAccessToken = (req: Request, res: Response) => {
 };
 
 //forgot password route
-export const resetPassword = async(req: Request, res: Response) => {
+export const resetPassword = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
 
-    if(!user) return res.status(404).json({message: "User not found"});
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -190,12 +181,12 @@ export const resetPassword = async(req: Request, res: Response) => {
 
     await user.save();
 
-    res.status(200).json({ message: "Password is reseted", user});
+    res.status(200).json({ message: "Password is reseted", user });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal server error", error });
   }
-}
+};
 
 //logout
 export const logout = (req: Request, res: Response) => {

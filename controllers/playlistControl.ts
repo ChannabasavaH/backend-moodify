@@ -9,6 +9,7 @@ export const addToFavorites = async (req: Request, res: Response) => {
     const { playlistId, moodTag } = req.body;
 
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
     if (!playlistId || !moodTag) {
       return res
         .status(400)
